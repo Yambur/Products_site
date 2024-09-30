@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product List</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h1>Product List</h1>
+    <form id="product-form">
+        <label for="name">Name:</label><br>
+        <input type="text" id="name" name="name"><br>
+        <label for="description">Description:</label><br>
+        <textarea id="description" name="description"></textarea><br>
+        <label for="price">Price:</label><br>
+        <input type="number" id="price" name="price" step="0.01"><br>
+        <input type="submit" value="Submit">
+    </form>
+    <table id="product-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Price</th>
+            </tr>
+        </thead>
+        <tbody id="product-tbody">
+        </tbody>
+    </table>
+
+    <script>
+        const form = document.getElementById('product-form');
+        const tbody = document.getElementById('product-tbody');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const description = document.getElementById('description').value;
+            const price = document.getElementById('price').value;
+
+            try {
+                const response = await fetch('/api/products/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, description, price })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to create product');
+                }
+
+                await updateProductList();
+            } catch (error) {
+                console.error('Error creating product:', error);
+            }
+        });
+
+        async function updateProductList() {
+            try {
+                const response = await fetch('/api/products/');
+                const products = await response.json();
+
+                tbody.innerHTML = '';
+                products.forEach(product => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${product.name}</td>
+                        <td>${product.description}</td>
+                        <td>${product.price}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error fetching products:', error);
+            }
+        }
+
+        // Initial load of products
+        updateProductList();
+    </script>
+</body>
+</html>
